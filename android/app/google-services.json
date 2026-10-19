@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "95696491228",
+    "project_id": "appstore-mashanan",
+    "storage_bucket": "appstore-mashanan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:95696491228:android:dc7ddff737fe7951cc5a19",
+        "android_client_info": {
+          "package_name": "com.mashanan.appstore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU8IcXa0xcwUm2EEvs_ZNpBurHe3_MM4A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

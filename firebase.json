@@ -1,0 +1,26 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "appstore-mashanan",
+          "appId": "1:95696491228:android:dc7ddff737fe7951cc5a19",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "appstore-mashanan",
+          "configurations": {
+            "android": "1:95696491228:android:dc7ddff737fe7951cc5a19",
+            "ios": "1:95696491228:ios:5da0b2aebcdf19e0cc5a19"
+          }
+        }
+      }
+    }
+  }
+}
