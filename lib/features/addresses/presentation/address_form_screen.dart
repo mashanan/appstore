@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/constrained_content.dart';
+import '../../../core/widgets/demo_data_notice.dart';
 import '../../auth/data/user_repository.dart';
 import '../data/address_repository.dart';
 import '../domain/address.dart';
@@ -119,6 +120,8 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const DemoDataNotice(),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _label,
                   decoration: const InputDecoration(labelText: 'Label', hintText: 'e.g. Home, Work'),

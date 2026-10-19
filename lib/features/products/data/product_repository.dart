@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/firebase/firebase_providers.dart';
 import '../domain/category.dart';
 import '../domain/product.dart';
+import '../domain/product_input.dart';
 
 class ProductRepository {
   ProductRepository(this._firestore);
@@ -24,6 +25,44 @@ class ProductRepository {
       final data = snapshot.data();
       return data == null ? null : productFromFirestore(snapshot.id, data);
     });
+  }
+
+  /// Adds a product and returns its id. Admin only.
+  Future<String> createProduct(ProductInput input) async {
+    final ref = _products.doc();
+    await ref.set({
+      ..._inputToFirestore(input),
+      'rating': 0,
+      'reviews': const [],
+      'tags': const [],
+      'source': 'admin',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    return ref.id;
+  }
+
+  /// Updates the editable fields of a product. Admin only.
+  Future<void> updateProduct(String id, ProductInput input) {
+    return _products.doc(id).update(_inputToFirestore(input));
+  }
+
+  /// Deletes a product. Carts show it as unavailable and past orders keep
+  /// their own copy, so nothing else needs cleaning up. Admin only.
+  Future<void> deleteProduct(String id) => _products.doc(id).delete();
+
+  static Map<String, dynamic> _inputToFirestore(ProductInput input) {
+    return {
+      'title': input.title,
+      'description': input.description,
+      'category': input.category,
+      'brand': input.brand,
+      'price': input.price,
+      'discountPercentage': input.discountPercentage,
+      'stock': input.stock,
+      'images': input.images,
+      'thumbnail': input.images.firstOrNull ?? '',
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
   }
 
   Stream<List<Category>> watchCategories() {

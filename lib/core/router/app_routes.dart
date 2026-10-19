@@ -14,6 +14,8 @@ abstract final class AppRoutes {
   static const newAddress = '/addresses/new';
   static const admin = '/admin';
   static const adminOrders = '/admin/orders';
+  static const adminProducts = '/admin/products';
+  static const newProduct = '/admin/products/new';
 
   static String productDetail(String productId) => '/products/$productId';
 
@@ -22,6 +24,11 @@ abstract final class AppRoutes {
   static String orderDetail(String orderId) => '/orders/$orderId';
 
   static String adminOrderDetail(String orderId) => '/admin/orders/$orderId';
+
+  static String editProduct(String productId) => '/admin/products/$productId/edit';
+
+  /// Sign-in page that returns to [from] afterwards.
+  static String signInFrom(String from) => Uri(path: signIn, queryParameters: {'from': from}).toString();
 
   static String editAddress(String addressId) => '/addresses/$addressId/edit';
 }

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/responsive/breakpoints.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../cart/data/cart_repository.dart';
 import '../../cart/presentation/widgets/quantity_stepper.dart';
 import '../data/product_repository.dart';
@@ -288,6 +289,22 @@ class _AddToCartBarState extends ConsumerState<_AddToCartBar> {
       label = 'All stock is in your cart';
     } else {
       label = 'Add to cart';
+    }
+
+    // Guests can browse freely but need an account to buy.
+    if (ref.watch(authStateProvider).value == null) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: FilledButton.icon(
+            onPressed: product.inStock
+                ? () => context.go(AppRoutes.signInFrom(AppRoutes.productDetail(product.id)))
+                : null,
+            icon: const Icon(Icons.login),
+            label: Text(product.inStock ? 'Sign in to buy' : 'Out of stock'),
+          ),
+        ),
+      );
     }
 
     return SafeArea(

@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../features/addresses/presentation/address_form_screen.dart';
 import '../../features/addresses/presentation/addresses_screen.dart';
 import '../../features/admin/presentation/admin_orders_screen.dart';
+import '../../features/admin/presentation/admin_products_screen.dart';
 import '../../features/admin/presentation/admin_screen.dart';
+import '../../features/admin/presentation/product_form_screen.dart';
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
@@ -23,6 +25,7 @@ import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../widgets/app_shell.dart';
 import 'app_routes.dart';
+import 'auth_redirect.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
@@ -33,13 +36,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: authRefresh,
     redirect: (context, state) {
       final user = authRepository.currentUser;
-      final location = state.matchedLocation;
-      final onAuthScreen = location == AppRoutes.signIn || location == AppRoutes.signUp;
-
-      if (user == null) return onAuthScreen ? null : AppRoutes.signIn;
-      if (!user.emailVerified) return location == AppRoutes.verifyEmail ? null : AppRoutes.verifyEmail;
-      if (onAuthScreen || location == AppRoutes.verifyEmail) return AppRoutes.catalog;
-      return null;
+      return authRedirect(uri: state.uri, signedIn: user != null, emailVerified: user?.emailVerified ?? false);
     },
     routes: [
       GoRoute(path: AppRoutes.signIn, builder: (context, state) => const SignInScreen()),
@@ -49,6 +46,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.admin,
         builder: (context, state) => const AdminScreen(),
         routes: [
+          GoRoute(
+            path: 'products',
+            builder: (context, state) => const AdminProductsScreen(),
+            routes: [
+              GoRoute(path: 'new', builder: (context, state) => const ProductFormScreen()),
+              GoRoute(
+                path: ':id/edit',
+                builder: (context, state) => ProductFormScreen(productId: state.pathParameters['id']),
+              ),
+            ],
+          ),
           GoRoute(
             path: 'orders',
             builder: (context, state) => const AdminOrdersScreen(),

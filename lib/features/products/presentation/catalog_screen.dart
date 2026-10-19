@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/responsive/breakpoints.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
 import '../domain/product_search.dart';
@@ -59,9 +60,23 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
+    final isGuest = ref.watch(authStateProvider).value == null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Shop')),
+      appBar: AppBar(
+        title: const Text('Shop'),
+        actions: [
+          if (isGuest)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton.icon(
+                onPressed: () => context.go(AppRoutes.signIn),
+                icon: const Icon(Icons.login),
+                label: const Text('Sign in'),
+              ),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(

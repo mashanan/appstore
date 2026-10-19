@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/widgets/demo_data_notice.dart';
 import '../data/auth_repository.dart';
 import 'auth_error_message.dart';
 import 'auth_form_layout.dart';
@@ -54,10 +55,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
+    final signInLocation = Uri(path: AppRoutes.signIn, queryParameters: from == null ? null : {'from': from});
+
     return AuthFormLayout(
       title: 'Create account',
       subtitle: 'Join to start buying and selling',
       children: [
+        const DemoDataNotice(),
+        const SizedBox(height: 16),
         Form(
           key: _formKey,
           child: Column(
@@ -120,7 +126,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('Already have an account?'),
-            TextButton(onPressed: () => context.go(AppRoutes.signIn), child: const Text('Sign in')),
+            TextButton(onPressed: () => context.go(signInLocation.toString()), child: const Text('Sign in')),
           ],
         ),
       ],

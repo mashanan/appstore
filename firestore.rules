@@ -29,9 +29,10 @@ service cloud.firestore {
       allow read: if isOwner(uid) || isAdmin();
       // New accounts always start as customers. Admins are promoted from the Firebase console.
       allow create: if isOwner(uid) && request.resource.data.role == 'customer';
-      // Users can edit their own profile but never their own role.
-      allow update: if (isOwner(uid) && request.resource.data.role == resource.data.role) || isAdmin();
-      allow delete: if isAdmin();
+      // Nobody changes roles from the app, not even admins: the demo admin account
+      // is shared publicly. Roles are managed in the Firebase console.
+      allow update: if (isOwner(uid) || isAdmin()) && request.resource.data.role == resource.data.role;
+      allow delete: if false;
 
       match /cartItems/{productId} {
         allow read, write: if isOwner(uid);
@@ -75,7 +76,8 @@ service cloud.firestore {
     }
 
     match /images/{imageId} {
-      allow read: if isSignedIn();
+      // Public, so guests browsing the catalog see uploaded product photos.
+      allow read: if true;
       // Keep each Base64 image well under Firestore's 1 MiB document limit.
       allow create: if isSignedIn()
         && request.resource.data.ownerId == request.auth.uid

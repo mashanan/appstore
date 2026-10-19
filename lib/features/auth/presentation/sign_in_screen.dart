@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/demo_accounts.dart';
 import '../../../core/router/app_routes.dart';
 import '../data/auth_repository.dart';
 import 'auth_error_message.dart';
@@ -51,6 +52,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
+  Future<void> _signInAsDemo(DemoAccount account) async {
+    _emailController.text = account.email;
+    _passwordController.text = account.password;
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signIn(email: account.email, password: account.password);
+    } catch (error) {
+      if (mounted) _showMessage(authErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
@@ -67,10 +81,49 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
+    final signUpLocation = Uri(path: AppRoutes.signUp, queryParameters: from == null ? null : {'from': from});
+
     return AuthFormLayout(
       title: 'Welcome back',
       subtitle: 'Sign in to continue shopping',
       children: [
+        Card(
+          margin: EdgeInsets.zero,
+          color: theme.colorScheme.secondaryContainer,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Just looking around?', style: theme.textTheme.titleSmall),
+                const SizedBox(height: 4),
+                Text('Try the app with a ready-made demo account.', style: theme.textTheme.bodySmall),
+                const SizedBox(height: 12),
+                for (final account in demoAccounts)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: OutlinedButton(
+                      onPressed: _isLoading ? null : () => _signInAsDemo(account),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        alignment: Alignment.centerLeft,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(account.label),
+                          Text(account.description, style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
         Form(
           key: _formKey,
           child: Column(
@@ -120,8 +173,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text("Don't have an account?"),
-            TextButton(onPressed: () => context.go(AppRoutes.signUp), child: const Text('Sign up')),
+            TextButton(onPressed: () => context.go(signUpLocation.toString()), child: const Text('Sign up')),
           ],
+        ),
+        TextButton.icon(
+          onPressed: () => context.go(AppRoutes.catalog),
+          icon: const Icon(Icons.storefront_outlined),
+          label: const Text('Browse as guest'),
         ),
       ],
     );

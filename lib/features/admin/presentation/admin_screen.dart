@@ -7,6 +7,7 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/constrained_content.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
+import '../../products/data/product_repository.dart';
 import '../data/catalog_import_service.dart';
 import 'admin_guard.dart';
 
@@ -25,6 +26,8 @@ class AdminScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _ManageOrdersCard(),
+                SizedBox(height: 12),
+                _ManageProductsCard(),
                 SizedBox(height: 12),
                 _ImportCatalogCard(),
               ],
@@ -61,6 +64,32 @@ class _ManageOrdersCard extends ConsumerWidget {
         }),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.push(AppRoutes.adminOrders),
+      ),
+    );
+  }
+}
+
+class _ManageProductsCard extends ConsumerWidget {
+  const _ManageProductsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final products = ref.watch(productsProvider).value;
+    final outOfStock = products?.where((p) => !p.inStock).length ?? 0;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Icon(Icons.inventory_2_outlined, color: Theme.of(context).colorScheme.primary),
+        title: const Text('Manage products'),
+        subtitle: Text(switch (products) {
+          null => 'Loading…',
+          _ when outOfStock > 0 => '${products.length} products · $outOfStock out of stock',
+          _ => '${products.length} products',
+        }),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(AppRoutes.adminProducts),
       ),
     );
   }
