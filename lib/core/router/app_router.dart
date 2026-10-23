@@ -23,6 +23,7 @@ import '../../features/products/presentation/catalog_screen.dart';
 import '../../features/products/presentation/product_detail_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/wishlist/presentation/wishlist_screen.dart';
 import '../widgets/app_shell.dart';
 import 'app_routes.dart';
 import 'auth_redirect.dart';
@@ -122,6 +123,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               routes: [
                 GoRoute(path: 'edit', builder: (context, state) => const EditProfileScreen()),
                 GoRoute(path: 'addresses', builder: (context, state) => const AddressesScreen()),
+                GoRoute(path: 'wishlist', builder: (context, state) => const WishlistScreen()),
               ],
             ),
           ]),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../wishlist/presentation/wishlist_button.dart';
 import '../../domain/product.dart';
 import 'price_text.dart';
 import 'product_image.dart';
@@ -43,6 +44,11 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: WishlistButton(productId: product.id, onImage: true),
+                  ),
                 ],
               ),
             ),

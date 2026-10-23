@@ -8,7 +8,9 @@ import '../../../core/widgets/empty_state.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
+import '../../wishlist/data/wishlist_repository.dart';
 import '../domain/product_search.dart';
+import '../domain/product_sort.dart';
 import 'widgets/category_chips.dart';
 import 'widgets/product_card.dart';
 
@@ -23,6 +25,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   final _searchController = TextEditingController();
   String _query = '';
   String? _category;
+  ProductSort _sort = ProductSort.recommended;
 
   @override
   void dispose() {
@@ -61,6 +64,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
     final isGuest = ref.watch(authStateProvider).value == null;
+    final wishlistCount = ref.watch(wishlistIdsProvider).value?.length ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -73,6 +77,19 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                 onPressed: () => context.go(AppRoutes.signIn),
                 icon: const Icon(Icons.login),
                 label: const Text('Sign in'),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                tooltip: 'Wishlist',
+                icon: Badge(
+                  isLabelVisible: wishlistCount > 0,
+                  label: Text('$wishlistCount'),
+                  child: const Icon(Icons.favorite_border),
+                ),
+                onPressed: () => context.go(AppRoutes.wishlist),
               ),
             ),
         ],
@@ -126,7 +143,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   );
                 }
 
-                final results = searchProducts(products, _query, category: _category);
+                final results = sortProducts(searchProducts(products, _query, category: _category), _sort);
                 if (results.isEmpty) {
                   return EmptyState(
                     icon: Icons.search_off,
@@ -136,11 +153,61 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   );
                 }
 
-                return _ProductGrid(products: results);
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${results.length} ${results.length == 1 ? 'product' : 'products'}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          _SortMenu(selected: _sort, onSelected: (sort) => setState(() => _sort = sort)),
+                        ],
+                      ),
+                    ),
+                    Expanded(child: _ProductGrid(products: results)),
+                  ],
+                );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SortMenu extends StatelessWidget {
+  const _SortMenu({required this.selected, required this.onSelected});
+
+  final ProductSort selected;
+  final ValueChanged<ProductSort> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<ProductSort>(
+      tooltip: 'Sort products',
+      initialValue: selected,
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        for (final sort in ProductSort.values)
+          CheckedPopupMenuItem(value: sort, checked: sort == selected, child: Text(sort.label)),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.sort, size: 20),
+            const SizedBox(width: 6),
+            Text(selected.label, style: Theme.of(context).textTheme.labelLarge),
+            const Icon(Icons.arrow_drop_down),
+          ],
+        ),
       ),
     );
   }

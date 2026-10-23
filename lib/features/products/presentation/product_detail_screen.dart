@@ -9,6 +9,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../cart/data/cart_repository.dart';
 import '../../cart/presentation/widgets/quantity_stepper.dart';
+import '../../wishlist/presentation/wishlist_button.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
 import 'widgets/price_text.dart';
@@ -24,7 +25,10 @@ class ProductDetailScreen extends ConsumerWidget {
     final productAsync = ref.watch(productProvider(productId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Product details')),
+      appBar: AppBar(
+        title: const Text('Product details'),
+        actions: [WishlistButton(productId: productId), const SizedBox(width: 8)],
+      ),
       body: productAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => const EmptyState(icon: Icons.cloud_off_outlined, title: 'Could not load this product'),

@@ -4,6 +4,7 @@ rules_version = '2';
 //   users/{uid}                       profile + role ('customer' | 'admin')
 //   users/{uid}/cartItems/{productId} the user's shopping cart
 //   users/{uid}/addresses/{addressId} the user's address book
+//   users/{uid}/wishlist/{productId}  products the user saved for later
 //   products/{productId}              catalog, public read, admin write
 //   categories/{categoryId}           catalog categories, public read, admin write
 //   orders/{orderId}                  placed by customers, managed by admins
@@ -39,6 +40,10 @@ service cloud.firestore {
       }
 
       match /addresses/{addressId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /wishlist/{productId} {
         allow read, write: if isOwner(uid);
       }
     }

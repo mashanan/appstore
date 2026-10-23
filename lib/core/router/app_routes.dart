@@ -11,6 +11,7 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const editProfile = '/profile/edit';
   static const addresses = '/profile/addresses';
+  static const wishlist = '/profile/wishlist';
   static const newAddress = '/addresses/new';
   static const admin = '/admin';
   static const adminOrders = '/admin/orders';
