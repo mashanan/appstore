@@ -16,6 +16,7 @@ class Product {
     this.shippingInformation,
     this.returnPolicy,
     this.reviews = const [],
+    this._reviewCount,
   });
 
   final String id;
@@ -37,7 +38,14 @@ class Product {
   final String? warrantyInformation;
   final String? shippingInformation;
   final String? returnPolicy;
+  /// Reviews that came with the imported catalog. Customer reviews live in
+  /// `products/{id}/reviews`.
   final List<ProductReview> reviews;
+
+  final int? _reviewCount;
+
+  /// How many reviews [rating] averages over, including customer reviews.
+  int get reviewCount => _reviewCount ?? reviews.length;
 
   bool get hasDiscount => discountPercentage > 0;
 

@@ -6,6 +6,7 @@ rules_version = '2';
 //   users/{uid}/addresses/{addressId} the user's address book
 //   users/{uid}/wishlist/{productId}  products the user saved for later
 //   products/{productId}              catalog, public read, admin write
+//   products/{productId}/reviews/{uid} customer reviews, one per customer
 //   categories/{categoryId}           catalog categories, public read, admin write
 //   orders/{orderId}                  placed by customers, managed by admins
 //   images/{imageId}                  Base64 photos kept out of other documents
@@ -48,18 +49,60 @@ service cloud.firestore {
       }
     }
 
+    // True when this write cancels a pending order that belongs to the caller.
+    function cancelsOwnPendingOrder(orderId) {
+      let path = /databases/$(database)/documents/orders/$(orderId);
+      return get(path).data.userId == request.auth.uid
+        && get(path).data.status == 'pending'
+        && getAfter(path).data.status == 'cancelled';
+    }
+
+    // Customers can touch three things on a product, each only alongside the
+    // action that justifies it. A production app would move these into
+    // Cloud Functions (paid plan) and check exact quantities.
     match /products/{productId} {
       allow read: if true;
       allow create, delete: if isAdmin();
-      // Customers may only lower the stock, which checkout does when an order is placed.
-      // A production app would move this into a Cloud Function (paid plan).
-      allow update: if isAdmin() || (
-        isSignedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])
-        && request.resource.data.stock is int
-        && request.resource.data.stock >= 0
-        && request.resource.data.stock < resource.data.stock
-      );
+      allow update: if isAdmin() || (isSignedIn() && (
+        // Checkout lowers the stock.
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])
+          && request.resource.data.stock is int
+          && request.resource.data.stock >= 0
+          && request.resource.data.stock < resource.data.stock
+        )
+        // Cancelling your own pending order puts the stock back.
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'restockedByOrder'])
+          && request.resource.data.stock > resource.data.stock
+          && cancelsOwnPendingOrder(request.resource.data.restockedByOrder)
+        )
+        // Posting a review updates the average rating once.
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewCount'])
+          && request.resource.data.reviewCount
+            == resource.data.get('reviewCount', resource.data.get('reviews', []).size()) + 1
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && !exists(/databases/$(database)/documents/products/$(productId)/reviews/$(request.auth.uid))
+          && existsAfter(/databases/$(database)/documents/products/$(productId)/reviews/$(request.auth.uid))
+        )
+      ));
+
+      // One review per customer per product, only after a delivered order, and final once posted.
+      match /reviews/{reviewerId} {
+        allow read: if true;
+        allow create: if isOwner(reviewerId)
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && request.resource.data.comment is string
+          && request.resource.data.comment.size() <= 1000
+          && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.userId == request.auth.uid
+          && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.status == 'delivered';
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
     }
 
     match /categories/{categoryId} {
@@ -75,8 +118,17 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && request.resource.data.items is list
         && request.resource.data.items.size() > 0;
-      // Only admins move an order through its status flow.
-      allow update: if isAdmin();
+      // Admins move orders through the status flow. Customers may only cancel
+      // their own order while it is still pending.
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.cancelledBy == 'customer'
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'statusUpdatedAt', 'cancelledBy', 'updatedAt'])
+      );
       allow delete: if false;
     }
 

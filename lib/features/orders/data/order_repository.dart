@@ -46,17 +46,20 @@ class OrderRepository {
     });
   }
 
-  /// Cancels an order and puts its items back in stock. Admin only.
-  Future<void> cancel(Order order) {
+  /// Cancels an order and puts its items back in stock.
+  ///
+  /// Admins can cancel until the order ships; customers only their own
+  /// pending orders. For customers, each restocked product records the order
+  /// id so Firestore rules can check the cancellation is real.
+  Future<void> cancel(Order order, {required CancelledBy by}) {
     final orderRef = _orders.doc(order.id);
     final products = _firestore.collection('products');
 
     return _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(orderRef);
       final status = OrderStatus.values.asNameMap()[snapshot.data()?['status']];
-      if (status == null || !status.canCancel) {
-        throw StateError('This order can no longer be cancelled.');
-      }
+      final allowed = by == CancelledBy.admin ? status?.canCancel : status?.canCustomerCancel;
+      if (allowed != true) throw StateError('This order can no longer be cancelled.');
 
       // Read every product first; transactions can't read after writing.
       final productSnapshots = [for (final item in order.items) await transaction.get(products.doc(item.productId))];
@@ -64,12 +67,16 @@ class OrderRepository {
       for (final (index, item) in order.items.indexed) {
         // Skip products that were deleted from the catalog since the order was placed.
         if (productSnapshots[index].exists) {
-          transaction.update(products.doc(item.productId), {'stock': FieldValue.increment(item.quantity)});
+          transaction.update(products.doc(item.productId), {
+            'stock': FieldValue.increment(item.quantity),
+            if (by == CancelledBy.customer) 'restockedByOrder': order.id,
+          });
         }
       }
       transaction.update(orderRef, {
         'status': OrderStatus.cancelled.name,
         'statusUpdatedAt.${OrderStatus.cancelled.name}': FieldValue.serverTimestamp(),
+        'cancelledBy': by.name,
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
@@ -110,6 +117,7 @@ class OrderRepository {
         for (final MapEntry(:key, :value) in (data['statusUpdatedAt'] as Map? ?? const {}).entries)
           if (statuses[key] != null && value is Timestamp) statuses[key]!: value.toDate(),
       },
+      cancelledBy: CancelledBy.values.asNameMap()[data['cancelledBy']],
     );
   }
 }

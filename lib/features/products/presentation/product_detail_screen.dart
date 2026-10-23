@@ -9,6 +9,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../cart/data/cart_repository.dart';
 import '../../cart/presentation/widgets/quantity_stepper.dart';
+import '../../reviews/data/review_repository.dart';
 import '../../wishlist/presentation/wishlist_button.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
@@ -139,15 +140,17 @@ class _ImageGalleryState extends State<_ImageGallery> {
   }
 }
 
-class _ProductInfo extends StatelessWidget {
+class _ProductInfo extends ConsumerWidget {
   const _ProductInfo({required this.product});
 
   final Product product;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    // Newest customer reviews first, then the ones that came with the catalog.
+    final reviews = [...?ref.watch(productReviewsProvider(product.id)).value, ...product.reviews];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +163,11 @@ class _ProductInfo extends StatelessWidget {
           children: [
             const Icon(Icons.star_rounded, size: 20, color: Colors.amber),
             const SizedBox(width: 4),
-            Text('${product.rating.toStringAsFixed(1)} · ${product.reviews.length} reviews', style: muted),
+            Text(
+              '${product.rating.toStringAsFixed(1)} · '
+              '${product.reviewCount} ${product.reviewCount == 1 ? 'review' : 'reviews'}',
+              style: muted,
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -189,10 +196,10 @@ class _ProductInfo extends StatelessWidget {
               leading: Icon(icon),
               title: Text(text),
             ),
-        if (product.reviews.isNotEmpty) ...[
+        if (reviews.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text('Reviews', style: theme.textTheme.titleMedium),
-          for (final review in product.reviews) _ReviewTile(review: review),
+          for (final review in reviews) _ReviewTile(review: review),
         ],
       ],
     );

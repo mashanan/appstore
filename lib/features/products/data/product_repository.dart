@@ -91,6 +91,7 @@ class ProductRepository {
       warrantyInformation: data['warrantyInformation'] as String?,
       shippingInformation: data['shippingInformation'] as String?,
       returnPolicy: data['returnPolicy'] as String?,
+      reviewCount: (data['reviewCount'] as num?)?.toInt(),
       reviews: [
         for (final review in data['reviews'] as List? ?? const [])
           ProductReview(

@@ -19,9 +19,15 @@ enum OrderStatus {
         delivered || cancelled => null,
       };
 
-  /// Orders can be cancelled until they leave the warehouse.
+  /// Admins can cancel orders until they leave the warehouse.
   bool get canCancel => this == pending || this == processing;
+
+  /// Customers can cancel only before the store starts working on the order.
+  bool get canCustomerCancel => this == pending;
 }
+
+/// Who cancelled an order, stored in `cancelledBy`.
+enum CancelledBy { customer, admin }
 
 enum ShippingMethod {
   standard('Standard delivery', 'Arrives in 5–7 business days', 0),
@@ -84,6 +90,7 @@ class Order {
     required this.paymentMethod,
     this.createdAt,
     this.statusTimes = const {},
+    this.cancelledBy,
   });
 
   final String id;
@@ -103,6 +110,9 @@ class Order {
 
   /// When the order reached each status after pending.
   final Map<OrderStatus, DateTime> statusTimes;
+
+  /// Set once the order is cancelled.
+  final CancelledBy? cancelledBy;
 
   DateTime? timeOf(OrderStatus status) => status == OrderStatus.pending ? createdAt : statusTimes[status];
 

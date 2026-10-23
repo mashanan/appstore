@@ -9,6 +9,8 @@ import '../../../core/widgets/constrained_content.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/data/user_repository.dart';
 import '../../products/presentation/widgets/product_image.dart';
+import '../../reviews/data/review_repository.dart';
+import '../../reviews/presentation/write_review_sheet.dart';
 import '../data/order_repository.dart';
 import '../domain/order.dart';
 import 'widgets/order_status_chip.dart';
@@ -28,10 +30,16 @@ class OrderDetailScreen extends ConsumerWidget {
     final isAdmin = ref.watch(currentUserProvider).value?.isAdmin ?? false;
     final showAdminActions =
         adminMode && isAdmin && order != null && (order.status.next != null || order.status.canCancel);
+    final showCustomerCancel = !adminMode && order != null && order.status.canCustomerCancel;
+    final canReview = !adminMode && order?.status == OrderStatus.delivered;
 
     return Scaffold(
       appBar: AppBar(title: Text(order == null ? 'Order' : 'Order #${order.number}')),
-      bottomNavigationBar: showAdminActions ? _AdminActions(order: order) : null,
+      bottomNavigationBar: showAdminActions
+          ? _AdminActions(order: order)
+          : showCustomerCancel
+              ? _CustomerCancelBar(order: order)
+              : null,
       body: orderAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => const EmptyState(icon: Icons.cloud_off_outlined, title: 'Could not load this order'),
@@ -45,7 +53,12 @@ class OrderDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     _Section(
                       title: 'Items',
-                      child: Column(children: [for (final item in order.items) _ItemRow(item: item)]),
+                      child: Column(
+                        children: [
+                          for (final item in order.items)
+                            _ItemRow(item: item, reviewOrderId: canReview ? order.id : null),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     _Section(
@@ -115,6 +128,11 @@ class _StatusCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'This order was cancelled'
+                      '${switch (order.cancelledBy) {
+                        CancelledBy.customer => ' by the customer',
+                        CancelledBy.admin => ' by the store',
+                        null => '',
+                      }}'
                       '${order.timeOf(OrderStatus.cancelled) == null ? '' : ' on ${formatOrderDate(order.timeOf(OrderStatus.cancelled))}'}.',
                     ),
                   ),
@@ -217,7 +235,7 @@ class _AdminActionsState extends ConsumerState<_AdminActions> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await _run(() => ref.read(orderRepositoryProvider).cancel(widget.order), 'Order cancelled.');
+    await _run(() => ref.read(orderRepositoryProvider).cancel(widget.order, by: CancelledBy.admin), 'Order cancelled.');
   }
 
   @override
@@ -296,9 +314,12 @@ class _Section extends StatelessWidget {
 }
 
 class _ItemRow extends StatelessWidget {
-  const _ItemRow({required this.item});
+  const _ItemRow({required this.item, this.reviewOrderId});
 
   final OrderItem item;
+
+  /// The order to review this item under, or null when it can't be reviewed.
+  final String? reviewOrderId;
 
   @override
   Widget build(BuildContext context) {
@@ -323,12 +344,123 @@ class _ItemRow extends StatelessWidget {
                   Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 2),
                   Text('${item.quantity} × ${formatPrice(item.unitPrice)}', style: theme.textTheme.bodySmall),
+                  if (reviewOrderId != null) _ReviewButton(item: item, orderId: reviewOrderId!),
                 ],
               ),
             ),
             const SizedBox(width: 12),
             Text(formatPrice(item.total), style: theme.textTheme.titleSmall),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReviewButton extends ConsumerWidget {
+  const _ReviewButton({required this.item, required this.orderId});
+
+  final OrderItem item;
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reviewed = ref.watch(hasReviewedProvider(item.productId)).value;
+    if (reviewed == null) return const SizedBox(height: 40);
+
+    if (reviewed) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 4),
+            Text('Reviewed', style: Theme.of(context).textTheme.labelMedium),
+          ],
+        ),
+      );
+    }
+
+    return TextButton.icon(
+      style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+      icon: const Icon(Icons.rate_review_outlined, size: 18),
+      label: const Text('Write a review'),
+      onPressed: () async {
+        final saved = await showWriteReviewSheet(
+          context,
+          productId: item.productId,
+          productTitle: item.title,
+          orderId: orderId,
+        );
+        if (saved && context.mounted) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(const SnackBar(content: Text('Thanks for your review!'), duration: Duration(seconds: 2)));
+        }
+      },
+    );
+  }
+}
+
+/// Lets customers cancel their own order while it's still pending.
+class _CustomerCancelBar extends ConsumerStatefulWidget {
+  const _CustomerCancelBar({required this.order});
+
+  final Order order;
+
+  @override
+  ConsumerState<_CustomerCancelBar> createState() => _CustomerCancelBarState();
+}
+
+class _CustomerCancelBarState extends ConsumerState<_CustomerCancelBar> {
+  bool _isCancelling = false;
+
+  Future<void> _cancel() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel this order?'),
+        content: const Text('You can cancel until the store starts processing it. This can’t be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Keep order')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Cancel order')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isCancelling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(orderRepositoryProvider).cancel(widget.order, by: CancelledBy.customer);
+      messenger.showSnackBar(const SnackBar(content: Text('Order cancelled.'), duration: Duration(seconds: 2)));
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not cancel. The store may have started processing your order.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isCancelling = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      elevation: 8,
+      color: colorScheme.surfaceContainer,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: OutlinedButton(
+            onPressed: _isCancelling ? null : _cancel,
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52), foregroundColor: colorScheme.error),
+            child: _isCancelling
+                ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Cancel order'),
+          ),
         ),
       ),
     );
