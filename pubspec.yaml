@@ -58,14 +58,18 @@ dev_dependencies:
 
 # App icons for Android and iOS. Regenerate after changing the logo with:
 #   dart run flutter_launcher_icons
+#
+# tokoku_icon.png and tokoku_icon_adaptive.png are tokoku_logo.png cropped to
+# the logo and enlarged, so the name stays readable at launcher size.
 flutter_launcher_icons:
-  image_path: assets/branding/tokoku_logo.png
+  image_path: assets/branding/tokoku_icon.png
   android: true
   ios: true
   remove_alpha_ios: true
-  # Android adaptive icon: launchers crop it to a circle, squircle or square.
+  # Android adaptive icon: launchers crop it to a circle, squircle or square,
+  # so the logo here is smaller to stay inside the circle.
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: assets/branding/tokoku_logo.png
+  adaptive_icon_foreground: assets/branding/tokoku_icon_adaptive.png
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -79,7 +83,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/branding/tokoku_logo.png
+    - assets/branding/tokoku_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
