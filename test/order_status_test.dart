@@ -1,4 +1,4 @@
-import 'package:appstore/features/orders/domain/order.dart';
+import 'package:tokoku/features/orders/domain/order.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

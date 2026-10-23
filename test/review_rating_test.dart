@@ -1,5 +1,5 @@
-import 'package:appstore/features/orders/domain/order.dart';
-import 'package:appstore/features/reviews/domain/rating.dart';
+import 'package:tokoku/features/orders/domain/order.dart';
+import 'package:tokoku/features/reviews/domain/rating.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

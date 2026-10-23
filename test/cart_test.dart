@@ -1,5 +1,5 @@
-import 'package:appstore/features/cart/domain/cart.dart';
-import 'package:appstore/features/products/domain/product.dart';
+import 'package:tokoku/features/cart/domain/cart.dart';
+import 'package:tokoku/features/products/domain/product.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Product _product({double price = 10, double discount = 0, int stock = 10}) {

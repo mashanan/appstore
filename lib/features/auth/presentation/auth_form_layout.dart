@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/config/app_info.dart';
+
 /// Shared scrollable, width-capped layout for the sign-in and sign-up screens.
 class AuthFormLayout extends StatelessWidget {
   const AuthFormLayout({
@@ -28,7 +30,16 @@ class AuthFormLayout extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Icon(Icons.storefront, size: 56, color: theme.colorScheme.primary),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
+                  Text(
+                    AppInfo.name,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
                   Text(title, style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
                   const SizedBox(height: 8),
                   Text(

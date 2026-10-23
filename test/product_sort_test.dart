@@ -1,5 +1,5 @@
-import 'package:appstore/features/products/domain/product.dart';
-import 'package:appstore/features/products/domain/product_sort.dart';
+import 'package:tokoku/features/products/domain/product.dart';
+import 'package:tokoku/features/products/domain/product_sort.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Product _product(String title, {double price = 10, double discount = 0, double rating = 4}) {

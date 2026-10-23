@@ -1,5 +1,5 @@
-import 'package:appstore/features/products/domain/product.dart';
-import 'package:appstore/features/products/domain/product_search.dart';
+import 'package:tokoku/features/products/domain/product.dart';
+import 'package:tokoku/features/products/domain/product_search.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Product _product(String id, String title, {String category = 'misc', String? brand, List<String> tags = const []}) {

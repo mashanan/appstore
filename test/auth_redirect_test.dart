@@ -1,4 +1,4 @@
-import 'package:appstore/core/router/auth_redirect.dart';
+import 'package:tokoku/core/router/auth_redirect.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

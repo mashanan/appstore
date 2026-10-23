@@ -1,4 +1,4 @@
-import 'package:appstore/core/responsive/breakpoints.dart';
+import 'package:tokoku/core/responsive/breakpoints.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
