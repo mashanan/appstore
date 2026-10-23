@@ -70,7 +70,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Address forms sit outside the shell so they can be pushed from checkout and profile alike.
+      // Pages opened from several tabs live outside the shell and are pushed,
+      // so back always returns to the page they were opened from.
+      GoRoute(
+        path: '/products/:id',
+        builder: (context, state) => ProductDetailScreen(productId: state.pathParameters['id']!),
+      ),
+      GoRoute(path: AppRoutes.wishlist, builder: (context, state) => const WishlistScreen()),
       GoRoute(path: AppRoutes.newAddress, builder: (context, state) => const AddressFormScreen()),
       GoRoute(
         path: '/addresses/:id/edit',
@@ -84,16 +90,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(
-              path: AppRoutes.catalog,
-              builder: (context, state) => const CatalogScreen(),
-              routes: [
-                GoRoute(
-                  path: 'products/:id',
-                  builder: (context, state) => ProductDetailScreen(productId: state.pathParameters['id']!),
-                ),
-              ],
-            ),
+            GoRoute(path: AppRoutes.catalog, builder: (context, state) => const CatalogScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
@@ -123,7 +120,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               routes: [
                 GoRoute(path: 'edit', builder: (context, state) => const EditProfileScreen()),
                 GoRoute(path: 'addresses', builder: (context, state) => const AddressesScreen()),
-                GoRoute(path: 'wishlist', builder: (context, state) => const WishlistScreen()),
               ],
             ),
           ]),

@@ -89,7 +89,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   label: Text('$wishlistCount'),
                   child: const Icon(Icons.favorite_border),
                 ),
-                onPressed: () => context.go(AppRoutes.wishlist),
+                onPressed: () => context.push(AppRoutes.wishlist),
               ),
             ),
         ],
@@ -235,7 +235,7 @@ class _ProductGrid extends StatelessWidget {
           final product = products[index];
           return ProductCard(
             product: product,
-            onTap: () => context.go(AppRoutes.productDetail(product.id)),
+            onTap: () => context.push(AppRoutes.productDetail(product.id)),
           );
         },
       ),

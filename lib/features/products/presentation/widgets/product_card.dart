@@ -6,10 +6,14 @@ import 'price_text.dart';
 import 'product_image.dart';
 
 class ProductCard extends StatelessWidget {
-  const ProductCard({super.key, required this.product, required this.onTap});
+  const ProductCard({super.key, required this.product, required this.onTap, this.hero = true});
 
   final Product product;
   final VoidCallback onTap;
+
+  /// Animates the photo into the product page. Turn off for grids shown on top
+  /// of the shop, or the same photo would fly between the two grids.
+  final bool hero;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +29,10 @@ class ProductCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Hero(tag: 'product-${product.id}', child: ProductImage(url: product.thumbnail)),
+                  if (hero)
+                    Hero(tag: 'product-${product.id}', child: ProductImage(url: product.thumbnail))
+                  else
+                    ProductImage(url: product.thumbnail),
                   if (product.hasDiscount)
                     Positioned(
                       top: 8,

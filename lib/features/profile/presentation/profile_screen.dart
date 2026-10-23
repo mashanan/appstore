@@ -53,7 +53,7 @@ class ProfileScreen extends ConsumerWidget {
                 final count => '$count saved products',
               }),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(AppRoutes.wishlist),
+              onTap: () => context.push(AppRoutes.wishlist),
             ),
             ListTile(
               leading: const Icon(Icons.location_on_outlined),

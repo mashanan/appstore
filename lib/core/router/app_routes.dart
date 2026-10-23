@@ -11,13 +11,15 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const editProfile = '/profile/edit';
   static const addresses = '/profile/addresses';
-  static const wishlist = '/profile/wishlist';
+  /// Full-screen and pushed, so back returns to wherever it was opened from.
+  static const wishlist = '/wishlist';
   static const newAddress = '/addresses/new';
   static const admin = '/admin';
   static const adminOrders = '/admin/orders';
   static const adminProducts = '/admin/products';
   static const newProduct = '/admin/products/new';
 
+  /// Full-screen and pushed, so back returns to wherever it was opened from.
   static String productDetail(String productId) => '/products/$productId';
 
   static String orderPlaced(String orderId) => '/order-placed/$orderId';

@@ -326,7 +326,7 @@ class _ItemRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     return InkWell(
-      onTap: () => context.go(AppRoutes.productDetail(item.productId)),
+      onTap: () => context.push(AppRoutes.productDetail(item.productId)),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),

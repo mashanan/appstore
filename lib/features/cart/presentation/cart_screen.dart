@@ -127,7 +127,7 @@ class _CartItemTile extends ConsumerWidget {
       child: Card(
         margin: EdgeInsets.zero,
         child: InkWell(
-          onTap: product == null ? null : () => context.go(AppRoutes.productDetail(product.id)),
+          onTap: product == null ? null : () => context.push(AppRoutes.productDetail(product.id)),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(

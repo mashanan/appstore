@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/responsive/breakpoints.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/shop_fallback_scope.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../cart/data/cart_repository.dart';
 import '../../cart/presentation/widgets/quantity_stepper.dart';
@@ -25,19 +26,22 @@ class ProductDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final productAsync = ref.watch(productProvider(productId));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Product details'),
-        actions: [WishlistButton(productId: productId), const SizedBox(width: 8)],
+    return ShopFallbackScope(
+      child: Scaffold(
+        appBar: AppBar(
+          leading: ShopFallbackScope.leading(context),
+          title: const Text('Product details'),
+          actions: [WishlistButton(productId: productId), const SizedBox(width: 8)],
+        ),
+        body: productAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => const EmptyState(icon: Icons.cloud_off_outlined, title: 'Could not load this product'),
+          data: (product) => product == null
+              ? const EmptyState(icon: Icons.search_off, title: 'Product not found')
+              : _ProductDetailBody(product: product),
+        ),
+        bottomNavigationBar: productAsync.value == null ? null : _AddToCartBar(product: productAsync.value!),
       ),
-      body: productAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => const EmptyState(icon: Icons.cloud_off_outlined, title: 'Could not load this product'),
-        data: (product) => product == null
-            ? const EmptyState(icon: Icons.search_off, title: 'Product not found')
-            : _ProductDetailBody(product: product),
-      ),
-      bottomNavigationBar: productAsync.value == null ? null : _AddToCartBar(product: productAsync.value!),
     );
   }
 }
