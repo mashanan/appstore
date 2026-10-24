@@ -38,9 +38,37 @@ jobs:
       - name: Run tests
         run: flutter test
 
+  firestore-rules:
+    name: Firestore rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: firestore-tests
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: firestore-tests/package-lock.json
+
+      # The Firestore emulator runs on Java.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test security rules against the emulator
+        run: npm test
+
   build-android:
     name: Build Android APK
-    needs: analyze-and-test
+    needs: [analyze-and-test, firestore-rules]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

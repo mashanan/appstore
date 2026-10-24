@@ -49,3 +49,6 @@ app.*.map.json
 
 # Firebase CLI cache
 .firebase/
+
+# Node dependencies for the Firestore rules tests
+node_modules/

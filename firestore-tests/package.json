@@ -1,0 +1,14 @@
+{
+  "name": "tokoku-firestore-rules-tests",
+  "private": true,
+  "description": "Tests for firestore.rules, run against the Firestore emulator.",
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-tokoku \"node --test rules.test.js\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.1.0",
+    "firebase-tools": "^15.34.1"
+  }
+}
